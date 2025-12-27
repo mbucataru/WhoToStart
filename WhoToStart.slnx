@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="WhoToStart.MVC/WhoToStart.MVC.csproj" />
+  <Project Path="WhoToStart.Services/WhoToStart.Services.csproj" />
+  <Project Path="WhoToStart/WhoToStart.API.csproj" />
+</Solution>
