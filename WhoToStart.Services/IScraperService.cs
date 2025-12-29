@@ -19,7 +19,7 @@ namespace WhoToStart.Services
         /// <summary>
         /// The method that returns Vegas Rankings for each position
         /// </summary>
-        /// <returns>An array (length 3) of strings, each string containing the Html for one position's rankings></returns>
+        /// <returns>An array (length 3) of strings, each string containing the Html for one position's rankings</returns>
         public Task<string[]> GetVegasHtmlAsync();    
     }
 }

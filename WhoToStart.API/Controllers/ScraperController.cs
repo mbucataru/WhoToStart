@@ -13,11 +13,19 @@ namespace WhoToStart.API.Controllers
         {
             _scraper = scraper;
         }
-        [HttpGet("test")]
-        public async Task<IActionResult> TestScraper()
+        [HttpGet("test/draftsharks")]
+        public async Task<IActionResult> TestDraftSharksScraper()
         {
             var html = await _scraper.GetDraftSharksHtmlAsync();
             return Ok(html);
+        }
+
+        [HttpGet("test/vegas")]
+        public async Task<IActionResult> TestVegasScraper()
+        {
+            string[] rankings = await _scraper.GetVegasHtmlAsync();
+
+            return Ok(rankings[0]);
         }
     }
 }

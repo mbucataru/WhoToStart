@@ -66,9 +66,11 @@ namespace WhoToStart.Services
                 await page.GotoAsync(VegasBaseLink);
 
                 var html = await page.ContentAsync();
+
+                returnArray[i] = html;
             }
 
-            throw new NotImplementedException();
+            return returnArray;
         }
     }
 }
