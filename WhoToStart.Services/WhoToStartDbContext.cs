@@ -5,11 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WhoToStart.Services
 {
-    internal class ProjectionsContext : DbContext
+    internal class WhoToStartDbContext : DbContext
     {
         public DbSet<Projection> Projections { get; set; }
+        public DbSet<Player> Players { get; set; }
 
-        public ProjectionsContext(DbContextOptions<ProjectionsContext> options) : base(options)
+        public WhoToStartDbContext(DbContextOptions<WhoToStartDbContext> options) : base(options)
         {
             
         }
