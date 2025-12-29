@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using WhoToStart.Services.Models;
 
-namespace WhoToStart.Services
+namespace WhoToStart.Services.Services
 {
     // ScraperService is a terrible name for what this is trying to do. Need to come up with a better one...
     public interface IScraperService

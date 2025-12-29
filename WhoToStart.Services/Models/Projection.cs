@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace WhoToStart.Services
+namespace WhoToStart.Services.Models
 {
     public class Projection
     {

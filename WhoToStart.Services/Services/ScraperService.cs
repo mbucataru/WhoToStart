@@ -1,7 +1,9 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.Playwright;
+using WhoToStart.Services.Data;
+using WhoToStart.Services.Models;
 
-namespace WhoToStart.Services
+namespace WhoToStart.Services.Services
 {
     public class ScraperService : IScraperService
     {

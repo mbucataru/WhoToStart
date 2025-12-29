@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using WhoToStart.Services.Models;
 
-namespace WhoToStart.Services
+namespace WhoToStart.Services.Data
 {
     public class WhoToStartDbContext : DbContext
     {

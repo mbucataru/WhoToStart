@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WhoToStart.Services;
+using WhoToStart.Services.Models;
+using WhoToStart.Services.Services;
 
 namespace WhoToStart.API.Controllers
 {

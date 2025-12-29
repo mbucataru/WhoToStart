@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using WhoToStart.Services;
+using WhoToStart.Services.Data;
+using WhoToStart.Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
