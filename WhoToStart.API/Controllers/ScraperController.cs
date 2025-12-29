@@ -13,7 +13,7 @@ namespace WhoToStart.API.Controllers
         {
             _scraper = scraper;
         }
-        [HttpGet("test/draftsharks")]
+        [HttpGet("test/draftsharks/scraper")]
         public async Task<IActionResult> TestDraftSharksScraper()
         {
             var html = await _scraper.GetDraftSharksHtmlAsync();
@@ -26,6 +26,16 @@ namespace WhoToStart.API.Controllers
             string[] rankings = await _scraper.GetVegasHtmlAsync();
 
             return Ok(rankings[0]);
+        }
+
+        [HttpGet("test/draftsharks/parser")]
+        public async Task<IActionResult> TestDraftSharksParser()
+        {
+            var html = await _scraper.GetDraftSharksHtmlAsync();
+
+            List<Projection> projections = _scraper.ParseDraftSharksHtml(html);
+
+            return Ok(projections);
         }
     }
 }
