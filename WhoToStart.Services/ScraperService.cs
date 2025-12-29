@@ -22,7 +22,7 @@ namespace WhoToStart.Services
             string html = await GetDraftSharksHtml();
         }
 
-        private async Task<string> GetDraftSharksHtml()
+        public async Task<string> GetDraftSharksHtml()
         {
             using var playwright = await Playwright.CreateAsync();
 

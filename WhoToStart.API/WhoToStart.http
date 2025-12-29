@@ -1,0 +1,5 @@
+@WhoToStart_HostAddress = http://localhost:5041
+
+### Scraper Test
+GET {{WhoToStart_HostAddress}}/scraper/test
+Accept: text/html

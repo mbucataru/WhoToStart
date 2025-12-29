@@ -8,5 +8,6 @@ namespace WhoToStart.Services
     {
         public Task ScrapeDraftSharks();
         public Task ScrapeVegas();
+        public Task<string> GetDraftSharksHtml();
     }
 }
