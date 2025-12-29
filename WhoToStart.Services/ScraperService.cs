@@ -57,13 +57,13 @@ namespace WhoToStart.Services
 
             string[] returnArray = new string[Positions.Length];
 
+            var page = await browser.NewPageAsync();
+
             for (int i = 0; i < Positions.Length; i++)
             {
                 string position = Positions[i];
 
-                var page = await browser.NewPageAsync();
-
-                await page.GotoAsync(VegasBaseLink);
+                await page.GotoAsync(VegasBaseLink + position);
 
                 var html = await page.ContentAsync();
 
