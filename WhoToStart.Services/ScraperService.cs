@@ -1,23 +1,18 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.Playwright;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
 
 namespace WhoToStart.Services
 {
     public class ScraperService : IScraperService
     {
-        private readonly IHttpClientFactory _factory;
         private readonly WhoToStartDbContext _context;
         private readonly string VegasBaseLink = "https://www.firstdown.studio/rankings/";
         private readonly string DraftSharksBaseLink = "https://www.draftsharks.com/weekly-rankings";
         private static readonly string[] Positions = { "QB", "FLEX", "K" };
 
         public ScraperService(IHttpClientFactory factory, WhoToStartDbContext context)
+
         {
-            _factory = factory;
             _context = context;
         }
 

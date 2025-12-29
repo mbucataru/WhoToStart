@@ -10,7 +10,6 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IScraperService, ScraperService>();
 builder.Services.AddDbContext<WhoToStartDbContext>();
-builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
