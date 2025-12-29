@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace WhoToStart.Services
 {
-    internal class WhoToStartDbContext : DbContext
+    public class WhoToStartDbContext : DbContext
     {
         public DbSet<Projection> Projections { get; set; }
         // I don't think this will ever get used...?

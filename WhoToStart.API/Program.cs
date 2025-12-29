@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using WhoToStart.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IScraperService, ScraperService>();
+builder.Services.AddDbContext<WhoToStartDbContext>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

@@ -10,18 +10,22 @@ namespace WhoToStart.Services
     public class ScraperService : IScraperService
     {
         private readonly IHttpClientFactory _factory;
+        private readonly WhoToStartDbContext _context;
         private readonly string VegasBaseLink = "https://www.firstdown.studio/rankings/";
         private readonly string DraftSharksBaseLink = "https://www.draftsharks.com/weekly-rankings";
         private static readonly string[] Positions = { "QB", "FLEX", "K" };
 
-        public ScraperService(IHttpClientFactory factory)
+        public ScraperService(IHttpClientFactory factory, WhoToStartDbContext context)
         {
             _factory = factory;
+            _context = context;
         }
 
+        // With fresh eyes, I need to see if this naming convention makes sense. Or even if this method should exist. I think it should, but I will decide later.
         public async Task ScrapeDraftSharksAsync()
         {
             string html = await GetDraftSharksHtmlAsync();
+            ParseDraftSharksHtml(html);
         }
 
         public async Task<string> GetDraftSharksHtmlAsync()
@@ -47,6 +51,8 @@ namespace WhoToStart.Services
             return html;
         }
 
+        // This should probably populate the DBContext while it is looping, there is no real good reason whatsoever to not do so.
+        // In that case, it probably shouldn't be called Parse (Or should it?)
         public List<Projection> ParseDraftSharksHtml(string html)
         {
             var doc = new HtmlDocument();
