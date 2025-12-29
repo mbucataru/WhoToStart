@@ -9,20 +9,21 @@ namespace WhoToStart.Services
     public class ScraperService : IScraperService
     {
         private readonly IHttpClientFactory _factory;
-        private readonly string VegasBaseLink = "https://www.parlaysavant.com/fantasy/vegas-rankings/week-17/";
+        private readonly string VegasBaseLink = "https://www.firstdown.studio/rankings/";
         private readonly string DraftSharksBaseLink = "https://www.draftsharks.com/weekly-rankings";
+        private static readonly string[] Positions = { "QB", "FLEX", "K" };
 
         public ScraperService(IHttpClientFactory factory)
         {
             _factory = factory;
         }
 
-        public async Task ScrapeDraftSharks()
+        public async Task ScrapeDraftSharksAsync()
         {
-            string html = await GetDraftSharksHtml();
+            string html = await GetDraftSharksHtmlAsync();
         }
 
-        public async Task<string> GetDraftSharksHtml()
+        public async Task<string> GetDraftSharksHtmlAsync()
         {
             using var playwright = await Playwright.CreateAsync();
 
@@ -43,8 +44,30 @@ namespace WhoToStart.Services
             return html;
         }
 
-        public async Task ScrapeVegas()
+        public async Task ScrapeVegasAsync()
         {
+            throw new NotImplementedException();
+        }
+
+        public async Task<string[]> GetVegasHtmlAsync()
+        {
+            using var playwright = await Playwright.CreateAsync();
+
+            await using var browser = await playwright.Chromium.LaunchAsync();
+
+            string[] returnArray = new string[Positions.Length];
+
+            for (int i = 0; i < Positions.Length; i++)
+            {
+                string position = Positions[i];
+
+                var page = await browser.NewPageAsync();
+
+                await page.GotoAsync(VegasBaseLink);
+
+                var html = await page.ContentAsync();
+            }
+
             throw new NotImplementedException();
         }
     }

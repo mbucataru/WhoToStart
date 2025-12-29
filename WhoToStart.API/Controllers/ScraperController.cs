@@ -16,7 +16,7 @@ namespace WhoToStart.API.Controllers
         [HttpGet("test")]
         public async Task<IActionResult> TestScraper()
         {
-            var html = await _scraper.GetDraftSharksHtml();
+            var html = await _scraper.GetDraftSharksHtmlAsync();
             return Ok(html);
         }
     }
