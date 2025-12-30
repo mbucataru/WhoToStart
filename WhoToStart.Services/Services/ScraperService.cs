@@ -22,7 +22,10 @@ namespace WhoToStart.Services.Services
         public async Task UpdateDraftSharksProjections()
         {
             string html = await ScrapeDraftSharksHtmlAsync();
-            ProcessDraftSharksHtml(html);
+            List<Projection> projections = ParseDraftSharksHTML(html);
+
+            _context.AddRange(projections);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<string> ScrapeDraftSharksHtmlAsync()
@@ -46,17 +49,6 @@ namespace WhoToStart.Services.Services
             var html = await page.ContentAsync();
 
             return html;
-        }
-
-        // TO-DO: This method should update the DB
-        // TO-DO: This method probably shouldn't return a list. We can return a list in a test implementation of the interface, but the real one shouldn't return anything
-        public List<Projection> ProcessDraftSharksHtml(string html)
-        {
-            var projections = ParseDraftSharksHTML(html);
-
-            // DB Updating goes here....
-
-            return projections;
         }
 
         // This also probably shouldn't return a list. Maybe this should return success / fail?
