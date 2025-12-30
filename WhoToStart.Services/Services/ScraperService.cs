@@ -19,13 +19,13 @@ namespace WhoToStart.Services.Services
         }
 
         // With fresh eyes, I need to see if this naming convention makes sense. Or even if this method should exist. I think it should, but I will decide later.
-        public async Task ScrapeDraftSharksAsync()
+        public async Task UpdateDraftSharksProjections()
         {
-            string html = await GetDraftSharksHtmlAsync();
-            ParseDraftSharksHtml(html);
+            string html = await ScrapeDraftSharksHtmlAsync();
+            ProcessDraftSharksHtml(html);
         }
 
-        public async Task<string> GetDraftSharksHtmlAsync()
+        public async Task<string> ScrapeDraftSharksHtmlAsync()
         {
             using var playwright = await Playwright.CreateAsync();
 
@@ -48,9 +48,19 @@ namespace WhoToStart.Services.Services
             return html;
         }
 
-        // This should probably populate the DBContext while it is looping, there is no real good reason whatsoever to not do so.
-        // In that case, it probably shouldn't be called Parse (Or should it?)
-        public List<Projection> ParseDraftSharksHtml(string html)
+        // TO-DO: This method should update the DB
+        // TO-DO: This method probably shouldn't return a list. We can return a list in a test implementation of the interface, but the real one shouldn't return anything
+        public List<Projection> ProcessDraftSharksHtml(string html)
+        {
+            var projections = ParseDraftSharksHTML(html);
+
+            // DB Updating goes here....
+
+            return projections;
+        }
+
+        // This also probably shouldn't return a list. Maybe this should return success / fail?
+        private List<Projection> ParseDraftSharksHTML(string html)
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
@@ -85,12 +95,14 @@ namespace WhoToStart.Services.Services
             return projections;
         }
 
-        public async Task ScrapeVegasAsync()
+        public async Task UpdateVegasProjections()
         {
+            string[] html = await ScrapeVegasHtmlAsync();
+            ProcessVegasHtml(html);
             throw new NotImplementedException();
         }
 
-        public async Task<string[]> GetVegasHtmlAsync()
+        public async Task<string[]> ScrapeVegasHtmlAsync()
         {
             using var playwright = await Playwright.CreateAsync();
 
@@ -112,6 +124,11 @@ namespace WhoToStart.Services.Services
             }
 
             return returnArray;
+        }
+
+        public void ProcessVegasHtml(string[] html)
+        {
+            throw new NotImplementedException();
         }
     }
 }
