@@ -1,3 +1,3 @@
 # WhoToStart
 
-A fantasy football start/sit calculator build using .NET 10
+A fantasy football start/sit calculator built using .NET 10
