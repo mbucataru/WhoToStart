@@ -1,12 +1,5 @@
 @WhoToStart_HostAddress = http://localhost:5041
 
-### DraftSharks Scraper Test
+### DraftSharks Scraper Test: BROKEN, Just here for a template
 GET {{WhoToStart_HostAddress}}/scraper/test/draftsharks/scraper
 Accept: text/html
-
-### Vegas Scraper Test
-GET {{WhoToStart_HostAddress}}/scraper/test/vegas/scraper
-Accept: text/html
-
-### DraftSharks Parser Test
-GET {{WhoToStart_HostAddress}}/scraper/test/draftsharks/parser
