@@ -1,31 +1,43 @@
 ﻿using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 using WhoToStart.Services.Data;
 using WhoToStart.Services.Models;
 
 namespace WhoToStart.Services.Services
 {
-    public class ScraperService : IScraperService
+    public class UpdaterService : IUpdaterService
     {
         private readonly WhoToStartDbContext _context;
         private readonly string VegasBaseLink = "https://www.firstdown.studio/rankings/";
         private readonly string DraftSharksBaseLink = "https://www.draftsharks.com/weekly-rankings";
         private static readonly string[] Positions = { "QB", "FLEX", "K" };
 
-        public ScraperService(IHttpClientFactory factory, WhoToStartDbContext context)
-
+        public UpdaterService(WhoToStartDbContext context)
         {
             _context = context;
         }
 
-        // With fresh eyes, I need to see if this naming convention makes sense. Or even if this method should exist. I think it should, but I will decide later.
+        public async Task UpdateProjections()
+        {
+            await UpdateDraftSharksProjections();
+            await UpdateVegasProjections();
+        }
+        
         public async Task UpdateDraftSharksProjections()
         {
             string html = await ScrapeDraftSharksHtmlAsync();
-            List<Projection> projections = ParseDraftSharksHTML(html);
+            List<Projection> projections = await ProcessDraftSharksHtml(html);
 
             _context.AddRange(projections);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateVegasProjections()
+        {
+            string[] html = await ScrapeVegasHtmlAsync();
+            ProcessVegasHtml(html);
+            throw new NotImplementedException();
         }
 
         public async Task<string> ScrapeDraftSharksHtmlAsync()
@@ -52,7 +64,7 @@ namespace WhoToStart.Services.Services
         }
 
         // This also probably shouldn't return a list. Maybe this should return success / fail?
-        private List<Projection> ParseDraftSharksHTML(string html)
+        private async Task<List<Projection>> ProcessDraftSharksHtml(string html)
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
@@ -70,7 +82,7 @@ namespace WhoToStart.Services.Services
                 if (position == "TQB")
                     continue;
 
-                var projection = new Projection
+                var newProjection = new Projection
                 {
                     Name = row.SelectSingleNode(".//a[@class='hide-on-mobile']").InnerText.Trim(),
                     Team = row.SelectSingleNode(".//div[@class='team-position-logo-container']/span").InnerText.Trim(),
@@ -81,18 +93,26 @@ namespace WhoToStart.Services.Services
                     FinalProjection = 0
                 };
 
-                projections.Add(projection);
+                Projection? existingRecord = await _context.Projections.FirstOrDefaultAsync(existingProj => 
+                    existingProj.Name == newProjection.Name && 
+                    existingProj.Position == newProjection.Position &&
+                    existingProj.Team == newProjection.Team);
+
+                if (existingRecord is null)
+                {
+                    await _context.Projections.AddAsync(newProjection);
+                }
+                else
+                {
+                    existingRecord.DraftSharksProjection = newProjection.DraftSharksProjection;
+                }
+                    projections.Add(newProjection);
             }
 
             return projections;
         }
 
-        public async Task UpdateVegasProjections()
-        {
-            string[] html = await ScrapeVegasHtmlAsync();
-            ProcessVegasHtml(html);
-            throw new NotImplementedException();
-        }
+
 
         public async Task<string[]> ScrapeVegasHtmlAsync()
         {

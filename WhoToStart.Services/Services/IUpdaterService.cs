@@ -6,7 +6,7 @@ using WhoToStart.Services.Models;
 namespace WhoToStart.Services.Services
 {
     // ScraperService is a terrible name for what this is trying to do. Need to come up with a better one...
-    public interface IScraperService
+    public interface IUpdaterService
     {
         public Task UpdateDraftSharksProjections();
         public Task UpdateVegasProjections();
@@ -24,6 +24,6 @@ namespace WhoToStart.Services.Services
         /// <returns>An array (length 3) of strings, each string containing the Html for one position's rankings</returns>
         public Task<string[]> ScrapeVegasHtmlAsync();
 
-        public List<Projection> ProcessDraftSharksHtml(string html);
+        public Task<List<Projection>> ProcessDraftSharksHtml(string html);
     }
 }

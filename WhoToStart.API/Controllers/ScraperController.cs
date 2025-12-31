@@ -8,23 +8,23 @@ namespace WhoToStart.API.Controllers
     [Route("[controller]")]
     public class ScraperController : ControllerBase
     {
-        private readonly IScraperService _scraper;
+        private readonly IUpdaterService _updater;
 
-        public ScraperController(IScraperService scraper)
+        public ScraperController(IUpdaterService scraper)
         {
-            _scraper = scraper;
+            _updater = scraper;
         }
         [HttpGet("test/draftsharks/scraper")]
         public async Task<IActionResult> TestDraftSharksScraper()
         {
-            var html = await _scraper.ScrapeDraftSharksHtmlAsync();
+            var html = await _updater.ScrapeDraftSharksHtmlAsync();
             return Ok(html);
         }
 
         [HttpGet("test/vegas")]
         public async Task<IActionResult> TestVegasScraper()
         {
-            string[] rankings = await _scraper.ScrapeVegasHtmlAsync();
+            string[] rankings = await _updater.ScrapeVegasHtmlAsync();
 
             return Ok(rankings[0]);
         }
@@ -32,9 +32,9 @@ namespace WhoToStart.API.Controllers
         [HttpGet("test/draftsharks/parser")]
         public async Task<IActionResult> TestDraftSharksParser()
         {
-            var html = await _scraper.ScrapeDraftSharksHtmlAsync();
+            var html = await _updater.ScrapeDraftSharksHtmlAsync();
 
-            List<Projection> projections = _scraper.ProcessDraftSharksHtml(html);
+            List<Projection> projections = await _updater.ProcessDraftSharksHtml(html);
 
             return Ok(projections);
         }
