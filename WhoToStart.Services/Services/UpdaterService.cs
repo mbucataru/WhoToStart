@@ -24,23 +24,20 @@ namespace WhoToStart.Services.Services
             await UpdateVegasProjections();
         }
         
-        public async Task UpdateDraftSharksProjections()
+        internal async Task UpdateDraftSharksProjections()
         {
-            string html = await ScrapeDraftSharksHtmlAsync();
-            List<Projection> projections = await ProcessDraftSharksHtml(html);
-
-            _context.AddRange(projections);
-            await _context.SaveChangesAsync();
+            string html = await ScrapeDraftSharksHtml();
+            await ProcessDraftSharksHtml(html);
         }
 
-        public async Task UpdateVegasProjections()
+        internal async Task UpdateVegasProjections()
         {
-            string[] html = await ScrapeVegasHtmlAsync();
+            string[] html = await ScrapeVegasHtml();
             ProcessVegasHtml(html);
             throw new NotImplementedException();
         }
 
-        public async Task<string> ScrapeDraftSharksHtmlAsync()
+        internal async Task<string> ScrapeDraftSharksHtml()
         {
             using var playwright = await Playwright.CreateAsync();
 
@@ -64,34 +61,18 @@ namespace WhoToStart.Services.Services
         }
 
         // This also probably shouldn't return a list. Maybe this should return success / fail?
-        private async Task<List<Projection>> ProcessDraftSharksHtml(string html)
+        internal async Task ProcessDraftSharksHtml(string html)
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
-
-            var projections = new List<Projection>();
             var playerRows = doc.DocumentNode.SelectNodes("//tbody[@data-player-row]");
-
-            // Used to trim Ranking away from the Position field.
-            var digits = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
             foreach (var row in playerRows)
             {
-                string position = row.SelectSingleNode(".//div[contains(@class, 'position-rank')]").InnerText.Trim().TrimEnd(digits);
-                // I don't have the slighest idea of why this is needed. I don't see these TQB's when I open the site normally, but in my requests I do.
-                if (position == "TQB")
-                    continue;
+                Projection? newProjection = ParseDraftSharksProjection(row);
 
-                var newProjection = new Projection
-                {
-                    Name = row.SelectSingleNode(".//a[@class='hide-on-mobile']").InnerText.Trim(),
-                    Team = row.SelectSingleNode(".//div[@class='team-position-logo-container']/span").InnerText.Trim(),
-                    Position = position,
-                    DraftSharksProjection = double.Parse(row.SelectSingleNode(".//td[contains(@class, 'three-d-proj')]//span[@class='column-title']").InnerText.Trim()),
-                    Week = 0, // BROKEN
-                    VegasProjection = 0,
-                    FinalProjection = 0
-                };
+                if (newProjection is null)
+                    continue;
 
                 Projection? existingRecord = await _context.Projections.FirstOrDefaultAsync(existingProj => 
                     existingProj.Name == newProjection.Name && 
@@ -106,15 +87,35 @@ namespace WhoToStart.Services.Services
                 {
                     existingRecord.DraftSharksProjection = newProjection.DraftSharksProjection;
                 }
-                    projections.Add(newProjection);
             }
+        }
+        
+        internal Projection? ParseDraftSharksProjection(HtmlNode row)
+        {
+            // Used to trim Ranking away from the Position field.
+            var digits = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-            return projections;
+            string position = row.SelectSingleNode(".//div[contains(@class, 'position-rank')]").InnerText.Trim().TrimEnd(digits);
+
+            // I don't have the slighest idea of why this is needed. I don't see these TQB's when I open the site normally, but in my requests I do.
+            if (position == "TQB")
+                return null;
+
+            var newProjection = new Projection
+            {
+                Name = row.SelectSingleNode(".//a[@class='hide-on-mobile']").InnerText.Trim(),
+                Team = row.SelectSingleNode(".//div[@class='team-position-logo-container']/span").InnerText.Trim(),
+                Position = position,
+                DraftSharksProjection = double.Parse(row.SelectSingleNode(".//td[contains(@class, 'three-d-proj')]//span[@class='column-title']").InnerText.Trim()),
+                Week = 0, // BROKEN
+                VegasProjection = 0,
+                FinalProjection = 0
+            };
+
+            return newProjection;
         }
 
-
-
-        public async Task<string[]> ScrapeVegasHtmlAsync()
+        internal async Task<string[]> ScrapeVegasHtml()
         {
             using var playwright = await Playwright.CreateAsync();
 
@@ -138,7 +139,7 @@ namespace WhoToStart.Services.Services
             return returnArray;
         }
 
-        public void ProcessVegasHtml(string[] html)
+        internal void ProcessVegasHtml(string[] html)
         {
             throw new NotImplementedException();
         }
