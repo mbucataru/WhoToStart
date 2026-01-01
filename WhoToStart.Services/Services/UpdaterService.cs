@@ -20,7 +20,7 @@ namespace WhoToStart.Services.Services
 
         public async Task UpdateProjections()
         {
-            await UpdateDraftSharksProjections();
+            //await UpdateDraftSharksProjections();
             await UpdateVegasProjections();
         }
         
@@ -141,6 +141,20 @@ namespace WhoToStart.Services.Services
 
         internal void ProcessVegasHtml(string[] html)
         {
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html[0]);
+
+            var rows = doc.DocumentNode.SelectNodes("//tbody[@data-slot='table-body']/tr");
+
+            foreach (var row in rows)
+            {
+                var cells = row.SelectNodes("td");
+
+                string name = cells[1].SelectSingleNode(".//span[contains(@class, 'font-bold')]").InnerText.Trim();
+                string team = cells[1].SelectSingleNode(".//span[contains(@class, 'muted-foreground')]//span[contains(@class, 'font-bold')]").InnerText.Trim();
+                double vegasProjection = double.Parse(cells[2].InnerText.Trim());
+            }
+
             throw new NotImplementedException();
         }
     }

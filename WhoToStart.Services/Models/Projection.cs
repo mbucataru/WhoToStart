@@ -6,6 +6,7 @@ namespace WhoToStart.Services.Models
 {
     public class Projection
     {
+        public int Id { get; set; }
         required public string Name { get; set; }
         required public string Team { get; set; }
         required public string Position { get; set; }

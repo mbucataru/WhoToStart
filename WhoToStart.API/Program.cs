@@ -10,7 +10,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IUpdaterService, UpdaterService>();
-builder.Services.AddDbContext<WhoToStartDbContext>();
+builder.Services.AddDbContext<WhoToStartDbContext>(options => options.UseSqlite("Data Source=whotostart.db"));
 
 var app = builder.Build();
 
