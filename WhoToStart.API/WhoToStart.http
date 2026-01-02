@@ -1,0 +1,5 @@
+@WhoToStart_HostAddress = http://localhost:5041
+
+### All Projections Updater
+POST {{WhoToStart_HostAddress}}/updater
+Accept: application/json

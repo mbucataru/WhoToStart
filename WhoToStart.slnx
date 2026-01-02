@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="WhoToStart.MVC/WhoToStart.MVC.csproj" />
   <Project Path="WhoToStart.Services/WhoToStart.Services.csproj" />
-  <Project Path="WhoToStart/WhoToStart.API.csproj" />
+  <Project Path="WhoToStart.API/WhoToStart.API.csproj" />
+  <Project Path="WhoToStart.Tests/WhoToStart.Tests.csproj" Id="2771393c-297e-4b95-8a0f-1509878ef242" />
 </Solution>

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using WhoToStart.Services.Models;
 
-namespace WhoToStart.Services
+namespace WhoToStart.Services.Data
 {
-    internal class WhoToStartDbContext : DbContext
+    public class WhoToStartDbContext : DbContext
     {
         public DbSet<Projection> Projections { get; set; }
-        public DbSet<Player> Players { get; set; }
 
         public WhoToStartDbContext(DbContextOptions<WhoToStartDbContext> options) : base(options)
         {
