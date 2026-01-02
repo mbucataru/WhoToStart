@@ -23,6 +23,7 @@ namespace WhoToStart.Services.Services
         {
             await UpdateDraftSharksProjections();
             await UpdateVegasProjections();
+            await UpdateFinalProjections();
             
         }
         
@@ -37,6 +38,35 @@ namespace WhoToStart.Services.Services
         {
             string[] html = await ScrapeVegasHtml();
             await ProcessVegasHtml(html);
+            await _context.SaveChangesAsync();
+        }
+
+        internal async Task UpdateFinalProjections()
+        {
+            List<Projection> projections = await _context.Projections.ToListAsync();
+
+            foreach (Projection projection in projections)
+            {
+                if (projection.DraftSharksProjection == 0 && projection.VegasProjection == 0) continue;
+
+                if (projection.DraftSharksProjection == 0 || projection.VegasProjection == 0)
+                {
+                    projection.FinalProjection = Math.Max(projection.DraftSharksProjection, projection.VegasProjection);
+                    continue;
+                }
+
+                if (projection.VegasProjection >= projection.DraftSharksProjection)
+                {
+                    projection.FinalProjection = projection.VegasProjection;
+                    continue;
+                }
+                else
+                {
+                    double projectionDelta = projection.DraftSharksProjection - projection.VegasProjection;
+                    projection.FinalProjection = projection.VegasProjection + (projectionDelta * 0.15);
+                }
+            }
+
             await _context.SaveChangesAsync();
         }
 
