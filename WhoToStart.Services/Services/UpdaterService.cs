@@ -1,6 +1,7 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
+using System.Runtime.CompilerServices;
 using WhoToStart.Services.Data;
 using WhoToStart.Services.Models;
 
@@ -20,21 +21,23 @@ namespace WhoToStart.Services.Services
 
         public async Task UpdateProjections()
         {
-            //await UpdateDraftSharksProjections();
+            await UpdateDraftSharksProjections();
             await UpdateVegasProjections();
+            
         }
         
         internal async Task UpdateDraftSharksProjections()
         {
             string html = await ScrapeDraftSharksHtml();
             await ProcessDraftSharksHtml(html);
+            await _context.SaveChangesAsync();
         }
 
         internal async Task UpdateVegasProjections()
         {
             string[] html = await ScrapeVegasHtml();
-            ProcessVegasHtml(html);
-            throw new NotImplementedException();
+            await ProcessVegasHtml(html);
+            await _context.SaveChangesAsync();
         }
 
         internal async Task<string> ScrapeDraftSharksHtml()
@@ -139,7 +142,7 @@ namespace WhoToStart.Services.Services
             return returnArray;
         }
 
-        internal void ProcessVegasHtml(string[] html)
+        internal async Task ProcessVegasHtml(string[] html)
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html[0]);
@@ -153,9 +156,35 @@ namespace WhoToStart.Services.Services
                 string name = cells[1].SelectSingleNode(".//span[contains(@class, 'font-bold')]").InnerText.Trim();
                 string team = cells[1].SelectSingleNode(".//span[contains(@class, 'muted-foreground')]//span[contains(@class, 'font-bold')]").InnerText.Trim();
                 double vegasProjection = double.Parse(cells[2].InnerText.Trim());
-            }
 
-            throw new NotImplementedException();
+
+                /* Our Vegas Rankings source will still post rankings even if they are not sourced from Vegas (they use some random fantasy model)
+                 * This ruins the point of scraping the vegas projections because this kind of projection is quite literally not a vegas projection
+                 * These non-Vegas stats are displayed as gray text. So, we check if any of the projections for one player is gray, if it is, the Vegas
+                 * projection is incomplete, so we should skip it.
+                 */
+                bool vegasProjectionIsIncomplete = false;
+                for (int i = 3; i < cells.Count; i++)
+                {
+                    var span = cells[i].SelectSingleNode(".//span[contains(@class, 'text-gray')]");
+                    if (span != null)
+                    {
+                        vegasProjectionIsIncomplete = true;
+                        break;
+                    }
+                }
+
+                Projection? existingProjection = await _context.Projections.FirstOrDefaultAsync(projection =>
+                projection.Name == name &&
+                projection.Team == team &&
+                projection.Position == Positions[0]);
+
+                if (existingProjection is null) throw new InvalidOperationException($"DraftSharks projection not found for {name}");
+
+                if (vegasProjectionIsIncomplete) continue;
+
+                existingProjection.VegasProjection = vegasProjection;
+            }
         }
     }
 }

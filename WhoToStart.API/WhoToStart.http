@@ -1,5 +1,5 @@
 @WhoToStart_HostAddress = http://localhost:5041
 
-### DraftSharks Scraper Test: BROKEN, Just here for a template
-GET {{WhoToStart_HostAddress}}/scraper/test/draftsharks/scraper
-Accept: text/html
+### All Projections Updater
+POST {{WhoToStart_HostAddress}}/updater
+Accept: application/json

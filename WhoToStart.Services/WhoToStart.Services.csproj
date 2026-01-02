@@ -19,4 +19,11 @@
     <PackageReference Include="Microsoft.Playwright" Version="1.57.0" />
   </ItemGroup>
 
+	<ItemGroup>
+		<Content Update="@(Content)">
+			<Visible Condition="'%(NuGetItemType)' == 'Content'">false</Visible>
+		</Content>
+	</ItemGroup>
+
+
 </Project>
