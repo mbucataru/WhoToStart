@@ -12,7 +12,7 @@ namespace WhoToStart.Services.Services
         private readonly WhoToStartDbContext _context;
         private readonly string VegasBaseLink = "https://www.firstdown.studio/rankings/";
         private readonly string DraftSharksBaseLink = "https://www.draftsharks.com/weekly-rankings";
-        private static readonly string[] Positions = { "QB", "FLEX", "K" };
+        private static readonly string[] Positions = { "QB", "RB", "WR", "TE" };
 
         public UpdaterService(WhoToStartDbContext context)
         {
@@ -63,7 +63,7 @@ namespace WhoToStart.Services.Services
                 else
                 {
                     double projectionDelta = projection.DraftSharksProjection - projection.VegasProjection;
-                    projection.FinalProjection = projection.VegasProjection + (projectionDelta * 0.15);
+                    projection.FinalProjection = Math.Round(projection.VegasProjection + (projectionDelta * 0.15), 1);
                 }
             }
 
@@ -164,6 +164,8 @@ namespace WhoToStart.Services.Services
 
                 await page.GotoAsync(VegasBaseLink + position);
 
+                await page.WaitForSelectorAsync("tbody span.font-bold");
+
                 var html = await page.ContentAsync();
 
                 returnArray[i] = html;
@@ -174,46 +176,54 @@ namespace WhoToStart.Services.Services
 
         internal async Task ProcessVegasHtml(string[] html)
         {
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html[0]);
-
-            var rows = doc.DocumentNode.SelectNodes("//tbody[@data-slot='table-body']/tr");
-
-            foreach (var row in rows)
+            for (int i = 0; i < html.Length; i++)
             {
-                var cells = row.SelectNodes("td");
+                var doc = new HtmlDocument();
+                doc.LoadHtml(html[i]);
 
-                string name = cells[1].SelectSingleNode(".//span[contains(@class, 'font-bold')]").InnerText.Trim();
-                string team = cells[1].SelectSingleNode(".//span[contains(@class, 'muted-foreground')]//span[contains(@class, 'font-bold')]").InnerText.Trim();
-                double vegasProjection = double.Parse(cells[2].InnerText.Trim());
+                var rows = doc.DocumentNode.SelectNodes("//tbody[@data-slot='table-body']/tr");
 
-
-                /* Our Vegas Rankings source will still post rankings even if they are not sourced from Vegas (they use some random fantasy model)
-                 * This ruins the point of scraping the vegas projections because this kind of projection is quite literally not a vegas projection
-                 * These non-Vegas stats are displayed as gray text. So, we check if any of the projections for one player is gray, if it is, the Vegas
-                 * projection is incomplete, so we should skip it.
-                 */
-                bool vegasProjectionIsIncomplete = false;
-                for (int i = 3; i < cells.Count; i++)
+                foreach (var row in rows)
                 {
-                    var span = cells[i].SelectSingleNode(".//span[contains(@class, 'text-gray')]");
-                    if (span != null)
+                    var cells = row.SelectNodes("td");
+
+                    string name;
+                    string team;
+                    double vegasProjection;
+
+                    name = cells[1].SelectSingleNode(".//span[contains(@class, 'font-bold')]").InnerText.Trim();
+                    team = cells[1].SelectSingleNode(".//span[contains(@class, 'muted-foreground')]//span[contains(@class, 'font-bold')]").InnerText.Trim();
+                    vegasProjection = double.Parse(cells[2].InnerText.Trim());
+
+                    /* Our Vegas Rankings source will still post rankings even if they are not sourced from Vegas (they use some random fantasy model)
+                     * This ruins the point of scraping the vegas projections because this kind of projection is quite literally not a vegas projection
+                     * These non-Vegas stats are displayed as gray text. So, we check if any of the projections for one player is gray, if it is, the Vegas
+                     * projection is incomplete, so we should skip it.
+                     */
+                    bool vegasProjectionIsIncomplete = false;
+                    for (int c = 3; c < cells.Count; c++)
                     {
-                        vegasProjectionIsIncomplete = true;
-                        break;
+                        var span = cells[c].SelectSingleNode(".//span[contains(@class, 'text-gray')]");
+                        if (span != null)
+                        {
+                            vegasProjectionIsIncomplete = true;
+                            break;
+                        }
                     }
+
+                    Projection? existingProjection = await _context.Projections.FirstOrDefaultAsync(projection =>
+                    projection.Name == name &&
+                    projection.Team == team &&
+                    projection.Position == Positions[i]);
+
+                    // DraftSharks is accurate when it comes to players starting or not starting. Our Vegas source, less-so.
+                    // As a result, if there is no DraftSharks projection, we assume the player is not playing, so we skip them.
+                    if (existingProjection is null) continue;
+
+                    if (vegasProjectionIsIncomplete) continue;
+
+                    existingProjection.VegasProjection = vegasProjection;
                 }
-
-                Projection? existingProjection = await _context.Projections.FirstOrDefaultAsync(projection =>
-                projection.Name == name &&
-                projection.Team == team &&
-                projection.Position == Positions[0]);
-
-                if (existingProjection is null) throw new InvalidOperationException($"DraftSharks projection not found for {name}");
-
-                if (vegasProjectionIsIncomplete) continue;
-
-                existingProjection.VegasProjection = vegasProjection;
             }
         }
     }
