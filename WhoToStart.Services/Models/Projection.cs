@@ -11,6 +11,7 @@ namespace WhoToStart.Services.Models
         required public string Name { get; set; }
         required public string Team { get; set; }
         required public string Position { get; set; }
+        required public string Format { get; set; }
         // TO-DO: Setup Week tracking: Not valid for now.
         public int Week { get; set; }
 
@@ -19,6 +20,7 @@ namespace WhoToStart.Services.Models
         public double DraftSharksProjection { get; set; }
 
         public double FinalProjection { get; set; }
+        
 
         [NotMapped]
         public string? MissingDataWarning

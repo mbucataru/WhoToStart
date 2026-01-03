@@ -13,6 +13,7 @@ namespace WhoToStart.Services.Services
         private readonly string VegasBaseLink = "https://www.firstdown.studio/rankings/";
         private readonly string DraftSharksBaseLink = "https://www.draftsharks.com/weekly-rankings";
         private static readonly string[] Positions = { "QB", "RB", "WR", "TE" };
+        private static readonly string[] Formats = { "PPR", "Half-PPR", "Standard" };
 
         public UpdaterService(WhoToStartDbContext context)
         {
@@ -29,7 +30,7 @@ namespace WhoToStart.Services.Services
         
         internal async Task UpdateDraftSharksProjections()
         {
-            string html = await ScrapeDraftSharksHtml();
+            string[] html = await ScrapeDraftSharksHtml();
             await ProcessDraftSharksHtml(html);
             await _context.SaveChangesAsync();
         }
@@ -70,7 +71,7 @@ namespace WhoToStart.Services.Services
             await _context.SaveChangesAsync();
         }
 
-        internal async Task<string> ScrapeDraftSharksHtml()
+        internal async Task<string[]> ScrapeDraftSharksHtml()
         {
             using var playwright = await Playwright.CreateAsync();
 
@@ -78,52 +79,68 @@ namespace WhoToStart.Services.Services
 
             var page = await browser.NewPageAsync();
 
-            await page.GotoAsync(DraftSharksBaseLink);
+            string[] htmlResults = new string[3];
 
-
-            // DS doesn't load the page contents right away and the max number of rankings is 250. This says "scroll down until you can see all of the rankings."
-            while (await page.Locator("div.column-title.rank-index:has-text('250')").CountAsync() == 0)
+            for (int i = 0; i < Formats.Length; i++)
             {
-                await page.EvaluateAsync("window.scrollTo(0, document.body.scrollHeight)");
-                await Task.Delay(500);
+                string formatSuffix = Formats[i];
+
+                // DraftShark's Standard scoring is accessible by having no link suffix
+                if (formatSuffix == "Standard")
+                    formatSuffix = "";
+
+                await page.GotoAsync(DraftSharksBaseLink + formatSuffix);
+
+                // DS doesn't load the page contents right away and the max number of rankings is 250. This says "scroll down until you can see all of the rankings."
+                while (await page.Locator("div.column-title.rank-index:has-text('250')").CountAsync() == 0)
+                {
+                    await page.EvaluateAsync("window.scrollTo(0, document.body.scrollHeight)");
+                    await Task.Delay(500);
+                }
+
+                var html = await page.ContentAsync();
+                htmlResults[i] = html;
             }
 
-            var html = await page.ContentAsync();
-
-            return html;
+            return htmlResults;
         }
 
         // This also probably shouldn't return a list. Maybe this should return success / fail?
-        internal async Task ProcessDraftSharksHtml(string html)
+        internal async Task ProcessDraftSharksHtml(string[] html)
         {
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-            var playerRows = doc.DocumentNode.SelectNodes("//tbody[@data-player-row]");
-
-            foreach (var row in playerRows)
+            for (int i = 0; i < html.Length; i++)
             {
-                Projection? newProjection = ParseDraftSharksProjection(row);
+                var doc = new HtmlDocument();
+                doc.LoadHtml(html[i]);
+                var playerRows = doc.DocumentNode.SelectNodes("//tbody[@data-player-row]");
 
-                if (newProjection is null)
-                    continue;
-
-                Projection? existingRecord = await _context.Projections.FirstOrDefaultAsync(existingProj => 
-                    existingProj.Name == newProjection.Name && 
-                    existingProj.Position == newProjection.Position &&
-                    existingProj.Team == newProjection.Team);
-
-                if (existingRecord is null)
+                string format = Formats[i];
+                foreach (var row in playerRows)
                 {
-                    await _context.Projections.AddAsync(newProjection);
-                }
-                else
-                {
-                    existingRecord.DraftSharksProjection = newProjection.DraftSharksProjection;
+                    Projection? newProjection = ParseDraftSharksProjection(row, format);
+
+                    if (newProjection is null)
+                        continue;
+
+                    Projection? existingRecord = await _context.Projections.FirstOrDefaultAsync(existingProj =>
+                        existingProj.Name == newProjection.Name &&
+                        existingProj.Position == newProjection.Position &&
+                        existingProj.Team == newProjection.Team &&
+                        existingProj.Format == newProjection.Format);
+
+                    if (existingRecord is null)
+                    {
+                        await _context.Projections.AddAsync(newProjection);
+                    }
+                    else
+                    {
+                        existingRecord.DraftSharksProjection = newProjection.DraftSharksProjection;
+                    }
                 }
             }
         }
         
-        internal Projection? ParseDraftSharksProjection(HtmlNode row)
+        internal Projection? ParseDraftSharksProjection(HtmlNode row, string format)
         {
             // Used to trim Ranking away from the Position field.
             var digits = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
@@ -142,7 +159,8 @@ namespace WhoToStart.Services.Services
                 DraftSharksProjection = double.Parse(row.SelectSingleNode(".//td[contains(@class, 'three-d-proj')]//span[@class='column-title']").InnerText.Trim()),
                 Week = 0, // BROKEN
                 VegasProjection = 0,
-                FinalProjection = 0
+                FinalProjection = 0,
+                Format = format
             };
 
             return newProjection;
@@ -154,9 +172,11 @@ namespace WhoToStart.Services.Services
 
             await using var browser = await playwright.Chromium.LaunchAsync();
 
+            var page = await browser.NewPageAsync();
+
             string[] returnArray = new string[Positions.Length];
 
-            var page = await browser.NewPageAsync();
+            
 
             for (int i = 0; i < Positions.Length; i++)
             {
@@ -226,5 +246,7 @@ namespace WhoToStart.Services.Services
                 }
             }
         }
+
+        internal Projection? ParseVegasProjection(HtmlNode row, string format)
     }
 }
